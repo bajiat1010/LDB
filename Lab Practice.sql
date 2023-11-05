@@ -1,0 +1,187 @@
+ CREATE DATABASE pranto;
+ USE pranto;
+
+ CREATE TABLE prantosm(
+ ID INT PRIMARY KEY,
+ Name VARCHAR(30),
+ Age INT,
+ Gender VARCHAR(6));
+
+ SELECT*FROM  prantosm;
+
+ INSERT INTO prantosm(ID,Name,Age,Gender) 
+ Values(1,'Pranto',22,'Male'),
+ (2,'Taren',20,'Female'),
+ (3,'Pranti',23,'Female'),
+ (4,'Priyo',21,'Male'),
+ (5,'Pran',24,'Male');
+
+ SELECT*FROM  prantosm;
+  
+ UPDATE prantosm SET name='Prabin' WHERE ID=5;
+ SELECT*FROM  prantosm;
+
+ DELETE FROM prantosm WHERE name='Prabin';
+ SELECT*FROM  prantosm;
+
+ -- LAB-1 --
+
+ CREATE TABLE smpranto(
+ ID INT PRIMARY KEY,
+ Name VARCHAR(30),
+ Salary NUMERIC(12,2),
+ Gender VARCHAR(6));
+
+ SELECT*FROM  smpranto;
+
+ INSERT INTO smpranto(ID,Name,Salary,Gender) 
+ Values(1,'Pranto',60000,'Male'),
+ (2,'Taren',55000,'Female'),
+ (3,'Pranti',50000,'Female'),
+ (4,'Priyo',63000,'Male'),
+ (5,'Pran',45000,'Male');
+
+ SELECT*FROM  smpranto;
+
+ ALTER TABLE smpranto ADD Age INT; 
+ ALTER TABLE smpranto ADD Section VARCHAR(30); 
+
+ SELECT*FROM smpranto;
+
+ --DROP TABLE smpranto;
+
+
+ -- LAB-2 --
+
+ SELECT*FROM smpranto;
+ SELECT ID,Name,Gender FROM smpranto;
+ SELECT ID,Name FROM smpranto WHERE Salary<=60000;
+
+ -- LAB-3 --
+
+ SELECT*FROM smpranto;
+
+ SELECT ID, AVG(Salary) AS average_salary
+	FROM smpranto
+	GROUP BY ID
+	HAVING AVG(salary) >= 55000;
+
+ SELECT ID,Name,Salary FROM smpranto ORDER BY Salary asc;
+
+ SELECT ID, MIN(Salary) AS Low_salary FROM smpranto
+	GROUP BY ID
+	HAVING Min(Salary)>50000;
+
+ SELECT Gender,COUNT(*) AS total FROM smpranto
+	GROUP BY Gender;
+
+ CREATE VIEW smp AS
+	SELECT ID,Name,Salary FROM smpranto;
+	SELECT*FROM smp;
+
+ CREATE VIEW my_view AS 
+	SELECT ID,Name,Salary 
+	FROM smpranto 
+	WHERE Salary>= 46000;
+	SELECT*FROM my_view;
+
+ CREATE INDEX My_Index ON smpranto(Name);
+ CREATE INDEX My_Index ON prantosm(Name);
+ SELECT*FROM smpranto;
+ SELECT*FROM prantosm;
+
+ CREATE PROCEDURE my_procedure AS
+ BEGIN
+ SELECT ID,Name,Salary AS Bonus FROM smpranto WHERE Salary>=51000;
+ END;
+ EXEC my_procedure;
+
+ CREATE PROCEDURE sum_numbers
+    @num1 INT,
+    @num2 INT
+ AS
+ BEGIN
+    DECLARE @sum INT;
+    SET @sum = @num1 + @num2;
+    SELECT @sum AS 'Sum';
+ END
+ EXEC sum_numbers 10, 20;
+
+ -- LAB-4 --
+
+ CREATE TABLE table1 (
+  id INT PRIMARY KEY,
+  name VARCHAR(50));
+
+ CREATE TABLE table2 (
+  id INT PRIMARY KEY,
+  age INT);
+ INSERT INTO table1 
+ VALUES (1, 'Pranto'), (2, 'Rajin'), (3, 'Rokon');
+ INSERT INTO table2
+ VALUES (1, 33), (2, 36), (4, 38);
+ 
+ SELECT*FROM table1;
+ SELECT*FROM table2;
+
+
+ SELECT name,age FROM table1,table2 WHERE table1.id=table2.id;
+ SELECT*FROM table1 JOIN table2 ON table1.id=table2.id;
+ SELECT*FROM table1  LEFT OUTER JOIN table2 ON table1.id=table2.id;
+ SELECT*FROM table1 RIGHT OUTER JOIN table2 ON table1.id=table2.id;
+ SELECT*FROM table1 FULL OUTER JOIN table2 ON table1.id=table2.id;
+
+ -- LAB-5 --
+
+ SELECT*FROM smpranto;
+
+ SELECT Name,COUNT(*) AS total FROM smpranto GROUP BY Name;
+ SELECT COUNT(Gender) AS Total_Male FROM smpranto WHERE Gender='Male';
+ SELECT COUNT(Name) AS Total FROM smpranto;
+ SELECT COUNT(Name) AS Short_list FROM smpranto WHERE ID>2;
+
+ SELECT AVG(Salary) AS Average_Salary FROM smpranto;
+ SELECT MIN(Salary) AS Min_Salary FROM smpranto;
+ SELECT MAX(Salary) AS Max_Salary FROM smpranto;
+
+ -- LAB-6 --
+ -----------
+ -- LAB-7 --
+ ----PHP----
+ -- LAB-8 --
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+

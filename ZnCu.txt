@@ -1,0 +1,417 @@
+01. Sampling
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Generate the sinusoidal signal
+f = 10 # signal frequency in Hz
+fs = 200 # sampling frequency in Hz
+t = np.arange(0, 1, 1/fs)
+x = np.sin(2*np.pi*f*t)
+
+# Plot the original signal
+plt.subplot(3,1,1)
+plt.plot(t, x)
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.title('Original Signal')
+
+# Sample the signal
+Ts = 1/fs  # Sampling interval (in seconds)
+n = np.arange(0, 1, Ts)
+xn = np.sin(2*np.pi*f*n)
+
+# Plot the sampled signal
+plt.subplot(3,1,2)
+plt.stem(n, xn)
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.title('Sampled Signal')
+
+# Reconstruct the analog signal using ideal reconstruction
+xr = np.zeros_like(t)  # Initialize the reconstructed signal
+for i in range(len(n)):
+    xr += xn[i] * np.sinc((t - i*Ts) / Ts)
+
+# Plot the reconstructed signal
+plt.subplot(3,1,3)
+plt.plot(t, xr)
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.title('Reconstructed Signal')
+
+plt.tight_layout()
+plt.show()
+
+---------------------------------------------------------------------
+02. Z Transform
+
+import scipy.signal as sig
+import numpy as np
+import matplotlib.pyplot as plt
+from lcapy.discretetime import n
+
+x = 1 / 16 ** n
+Z = x.ZT()
+print(Z)
+
+x = Z.IZT()
+print(x)
+
+num = [1, 0, 0, 1]
+den = [1, 0, 2, 0, 1]
+[z, p, k] = sig.tf2zpk(num, den)
+plt.subplot(1, 1, 1)
+plt.scatter(np.real(z), np.imag(z), edgecolors='b', marker='o')
+plt.scatter(np.real(p), np.imag(p), color='b', marker='x')
+plt.show()
+
+---------------------------------------------------------------------
+03. DFT-IDFT
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# MATLAB-style plot formatting
+plt.style.use('ggplot')
+
+# Define variables
+n = np.arange(-1, 4)
+x = np.arange(1, 6)
+N = len(n)
+k = np.arange(len(n))
+
+# Calculate Fourier transform
+X = np.sum(x * np.exp(-2j * np.pi * np.outer(n, k) / N), axis=1)
+magX = np.abs(X)
+angX = np.angle(X)
+realX = np.real(X)
+imagX = np.imag(X)
+
+# Plot Fourier transform components
+fig, axs = plt.subplots(2, 2, figsize=(8, 6))
+axs[0, 0].plot(k, magX)
+axs[0, 0].grid(True)
+axs[0, 0].set_xlabel('Frequency in pi units')
+axs[0, 0].set_title('Magnitude part')
+
+axs[0, 1].plot(k, angX)
+axs[0, 1].grid(True)
+axs[0, 1].set_xlabel('Frequency in pi units')
+axs[0, 1].set_title('Angle part')
+
+axs[1, 0].plot(k, realX)
+axs[1, 0].grid(True)
+axs[1, 0].set_xlabel('Frequency in pi units')
+axs[1, 0].set_title('Real part')
+
+axs[1, 1].plot(k, imagX)
+axs[1, 1].grid(True)
+axs[1, 1].set_xlabel('Frequency in pi units')
+axs[1, 1].set_title('Imaginary part')
+
+plt.tight_layout()
+plt.show()
+
+# Perform FFT on signal
+fs = 128
+N = 256
+T = 1 / fs
+k = np.arange(N)
+time = k * T
+f = 0.25 + 2 * np.sin(2 * np.pi * 5 * k * T) + 1 * np.sin(2 * np.pi * 12.5 * k * T) + 1.5 * np.sin(
+    2 * np.pi * 20 * k * T) + 0.5 * np.sin(2 * np.pi * 35 * k * T)
+
+# Plot original signal
+fig, axs = plt.subplots(2, 1, figsize=(8, 6))
+axs[0].plot(time, f)
+axs[0].set_title('Signal sampled at 128Hz')
+
+# Calculate FFT and plot frequency components
+F = np.fft.fft(f)
+magF = np.abs(np.hstack((F[0] / N, F[1:N // 2] / (N / 2))))
+hertz = k[0:N // 2] * (1 / (N * T))
+axs[1].stem(hertz, magF)
+axs[1].set_title('Frequency Components')
+plt.tight_layout()
+plt.show()
+
+---------------------------------------------------------------------
+04. FIR(LowPass) 
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000  # sampling rate
+N = 50  # order of filer
+fc = 1200  # cutoff frequency
+b = sig.firwin(N + 1, fc, fs=fs, window='hamming', pass_zero='lowpass')
+w, h_freq = sig.freqz(b, fs=fs)
+z, p, k = sig.tf2zpk(b, 1)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h_freq))  # magnitude
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Magnitude')
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h_freq)))  # phase
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Phase(angel)')
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.show()
+
+--------------------------------------------------------------------
+04. FIR(HighPass)
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000  # sampling rate
+N = 50  # order of filer
+fc = 1200  # cutoff frequency
+b = sig.firwin(N + 1, fc, fs=fs, window='hamming', pass_zero='highpass')
+w, h_freq = sig.freqz(b, fs=fs)
+z, p, k = sig.tf2zpk(b, 1)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h_freq))  # magnitude
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Magnitude')
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h_freq)))  # phase
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Phase(angel)')
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.show()
+
+--------------------------------------------------------------------
+04. FIR(BandPass)
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000  # sampling rate
+N = 50  # order of filer
+fc = np.array([1200, 1800])  # cutoff frequency
+b = sig.firwin(N + 1, fc, fs=fs, window='hamming', pass_zero='bandpass')
+w, h_freq = sig.freqz(b, fs=fs)
+z, p, k = sig.tf2zpk(b, 1)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h_freq))  # magnitude
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Magnitude')
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h_freq)))  # phase
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Phase(angel)')
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+-------------------------------------------------------------------
+04. FIR(BandStop)
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000  # sampling rate
+N = 50  # order of filer
+fc = np.array([1200, 2800])  # cutoff frequency
+# wc = 2 * fc / fs  # normalized cutoff frequency to the nyquist frequency
+b = sig.firwin(N + 1, fc, fs=fs, window='hamming', pass_zero='bandstop')
+w, h_freq = sig.freqz(b, fs=fs)
+z, p, k = sig.tf2zpk(b, 1)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h_freq))  # magnitude
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Magnitude')
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h_freq)))  # phase
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Phase(angel)')
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+----------------------------------------------------------------------
+04. FIR (MultiBand)
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+N = 50
+fs = 8000
+fc = np.array([1200, 1400, 2500, 2600])
+b = sig.firwin(N + 1, fc, fs=fs, window='hamming', pass_zero='bandpass')
+w, h_freq = sig.freqz(b, fs=fs)
+z, p, k = sig.tf2zpk(b, 1)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h_freq))  # magnitude
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Magnitude')
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h_freq)))  # phase
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Phase(angel)')
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.show()
+
+-------------------------------------------------------------------
+04. FIR (Notch)
+
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+import numpy as np
+
+fs = 8000
+N = 50
+fc = np.array([2000, 2050])
+b = sig.firwin(N + 1, fc, fs=fs, window='hamming', pass_zero='bandstop')
+z, p, k = sig.tf2zpk(b, 1)
+w, h_freq = sig.freqz(b, 1, fs=fs)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h_freq))
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Magnitude')
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h_freq)))
+plt.xlabel('frequency(Hz)')
+plt.ylabel('Phase(angel)')
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+---------------------------------------------------------------------
+04. IIR(LowPass)
+
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.signal as sig
+
+fs = 8000
+n, w = sig.buttord(1200 / 4000, 1500 / 4000, 1, 50)
+[b, a] = sig.butter(n, w)
+w, h = sig.freqz(b, a, 512, fs=8000)
+z, p, k = sig.tf2zpk(b, a)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h))
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h)))
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+-------------------------------------------------------------------
+04. IIR(HighPass) 
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000
+[n, w] = sig.buttord(1200 / 4000, 1500 / 4000, 1, 50)
+[b, a] = sig.butter(n, w, btype='highpass')
+w, h = sig.freqz(b, a, 512, fs=fs)
+z, p, k = sig.tf2zpk(b, a)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h))
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h)))
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+---------------------------------------------------------------------
+04. IIR (BandPass)
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000
+[n, w] = sig.buttord([1000 / 4000, 2500 / 4000], [400 / 4000, 3200 / 4000], 1, 50)
+[b, a] = sig.butter(n, w, btype='bandpass')
+w, h = sig.freqz(b, a, 512, fs=fs)
+z, p, k = sig.tf2zpk(b, a)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h))
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h)))
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+----------------------------------------------------------------------
+04. IIR(BandStop)
+
+import numpy as np
+import scipy.signal as sig
+import matplotlib.pyplot as plt
+
+fs = 8000
+[n, w] = sig.buttord([1000 / 4000, 2500 / 4000], [400 / 4000, 3200 / 4000], 1, 50)
+[b, a] = sig.butter(n, w, btype='bandstop')
+w, h = sig.freqz(b, a, 512, fs=fs)
+z, p, k = sig.tf2zpk(b, a)
+
+plt.subplot(3, 1, 1)
+plt.plot(w, np.abs(h))
+
+plt.subplot(3, 1, 2)
+plt.plot(w, np.unwrap(np.angle(h)))
+
+plt.subplot(3, 1, 3)
+plt.scatter(np.real(z), np.imag(z), marker='o', edgecolors='b')
+plt.scatter(np.real(p), np.imag(p), marker='x', color='b')
+plt.tight_layout()
+plt.show()
+
+---------------------------------------------------------------------
